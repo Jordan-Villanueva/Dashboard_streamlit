@@ -46,4 +46,4 @@ fig.update_yaxes(title_text='Población (millones de habitantes)')
 fig.update_xaxes(tickangle=-60)
 
 # Display Bar Chart
-st.plotly_chart(fig)
+st.plotly_chart(fig,use_container_width=True)
