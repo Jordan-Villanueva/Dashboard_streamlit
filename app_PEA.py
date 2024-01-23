@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+#set the whole page
+st.set_page_config(layout="wide")
 # Load data
 url = 'https://raw.githubusercontent.com/Jordan-Villanueva/Dashboard_Veredis/main/Tasa_de_Desocupacion.csv'
 data = pd.read_csv(url, encoding='latin-1')
