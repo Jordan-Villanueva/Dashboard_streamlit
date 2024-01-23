@@ -11,24 +11,24 @@ data = data.drop(columns=['Unnamed: 7', 'Unnamed: 8'])
 # Unique years and trimesters
 unique_years = data['Periodo'].unique()
 
-# Title
+# App layout
 st.title("Población Económica Activa en México")
 
-# Select Year
+# Year dropdown
 selected_year = st.selectbox("Seleccionar Año:", unique_years, index=len(unique_years)-1)
 
-# Select Trimester
+# Trimester dropdown
 if selected_year == 2023:
     trimester_options = [1, 2]
-    selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options)
 else:
     trimester_options = data['Trimestre'].unique()
-    selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, index=len(trimester_options)-1)
+
+selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, index=len(trimester_options)-1)
 
 # Filter data
 filtered_data = data[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
 
-# Bar Chart
+# Plot
 fig = px.bar(
     filtered_data,
     x='Entidad_Federativa',
@@ -39,11 +39,10 @@ fig = px.bar(
     color_discrete_sequence=['steelblue', 'magenta'],
     title=f'Población Económica Activa en {selected_year} - Trimestre {selected_trimester}'
 )
-
-# Customize axes titles
+# Customize axis titles
 fig.update_xaxes(title_text='Entidad Federativa')
 fig.update_yaxes(title_text='Población (millones de habitantes)')
 fig.update_xaxes(tickangle=-60)
 
-# Display Bar Chart
-st.plotly_chart(fig,use_container_width=True)
+# Write the plot with custom width
+st.write(fig, width=0, use_container_width=True)
