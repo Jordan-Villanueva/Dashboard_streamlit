@@ -44,5 +44,5 @@ fig.update_xaxes(title_text='Entidad Federativa')
 fig.update_yaxes(title_text='Población (millones de habitantes)')
 fig.update_xaxes(tickangle=-60)
 
-# Write the plot with custom width
-st.write(fig, width=0, use_container_width=True)
+# Use st.plotly_chart with custom width
+st.plotly_chart(fig, use_container_width=True)
