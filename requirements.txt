@@ -1,3 +1,4 @@
 streamlit==0.88.0
 plotly==5.3.1
 pandas
+seaborn
