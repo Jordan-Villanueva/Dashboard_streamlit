@@ -33,6 +33,9 @@ selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, i
 # Add vertical separation
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
+
 
 # Filter data
 filtered_data = data[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
