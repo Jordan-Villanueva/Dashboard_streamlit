@@ -19,6 +19,9 @@ st.title("Población Económica Activa en México")
 # Year dropdown
 selected_year = st.selectbox("Seleccionar Año:", unique_years, index=len(unique_years)-1)
 
+# Add vertical separation
+st.markdown("<br>", unsafe_allow_html=True)
+
 # Trimester dropdown
 if selected_year == 2023:
     trimester_options = [1, 2]
@@ -26,6 +29,10 @@ else:
     trimester_options = data['Trimestre'].unique()
 
 selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, index=len(trimester_options)-1)
+
+# Add vertical separation
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
 # Filter data
 filtered_data = data[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
