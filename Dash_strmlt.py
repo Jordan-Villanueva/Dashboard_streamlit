@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Load data
 url = 'https://raw.githubusercontent.com/Jordan-Villanueva/Dashboard_Veredis/main/Tasa_de_Desocupacion.csv'
@@ -25,21 +26,20 @@ else:
 # Filter data based on user selection
 filtered_data = data[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
 
-# Bar chart using Plotly Express
-fig = px.bar(
-    filtered_data,
+# Bar chart using Matplotlib and Seaborn
+fig, ax = plt.subplots(figsize=(10, 6))
+sns.barplot(
+    data=filtered_data,
     x='Entidad_Federativa',
     y='Poblacion_Economicamente_Activa',
-    color='Sexo',
-    barmode='group',
-    labels={'Poblacion_Economicamente_Activa': 'Población (millones de habitantes)'},
-    color_discrete_sequence=['steelblue', 'magenta'],
-    title=f'Población Económica Activa en {selected_year} - Trimestre {selected_trimester}'
+    hue='Sexo',
+    palette=['steelblue', 'magenta']
 )
-
-# Customize axis titles and appearance
-fig.update_xaxes(title_text='Entidad Federativa', tickangle=-60)
-fig.update_yaxes(title_text='Población (millones de habitantes)')
+plt.title(f'Población Económica Activa en {selected_year} - Trimestre {selected_trimester}')
+plt.xlabel('Entidad Federativa')
+plt.ylabel('Población (millones de habitantes)')
+plt.xticks(rotation=45, ha='right')
+plt.legend(title='Sexo')
 
 # Display the chart
-st.plotly_chart(fig)
+st.pyplot(fig)
