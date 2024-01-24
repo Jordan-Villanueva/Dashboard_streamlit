@@ -77,10 +77,12 @@ gdf['NOM_ENT'][29] = 'Veracruz'
 # Supongamos que la columna 'Entidad_Federativa' es la clave
 merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
 
-m = folium.Map(location=[23.6260333, -102.5375005], tiles='CartoDB positron', name='Light Map', zoom_start=5,
-               attr="My Data attribution")
+# Crear una nueva columna con la información deseada para el tooltip
+merged_data['Tooltip'] = merged_data.apply(lambda row: f"{row['NOM_ENT']}: {row['Poblacion_Economicamente_Activa']}", axis=1)
 
-# Añadir la capa coroplética
+m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=6, attr="My Data attribution")
+
+# Añadir la capa coroplética con GeoJsonTooltip
 folium.Choropleth(
     geo_data=merged_data,
     name="choropleth",
@@ -90,7 +92,9 @@ folium.Choropleth(
     fill_color="YlOrRd",
     fill_opacity=0.7,
     line_opacity=0.1,
-    legend_name='Poblacion_Economicamente_Activa'
+    legend_name='Poblacion_Economicamente_Activa',
+    highlight=True,  # Para resaltar las entidades al pasar el cursor
+    tooltip=folium.features.GeoJsonTooltip(fields=['Tooltip'], labels=False)
 ).add_to(m)
 
 # Añadir el control de capas
@@ -98,3 +102,7 @@ folium.LayerControl().add_to(m)
 
 # Desplegar el mapa
 folium_static(m, width=1600, height=950)
+
+
+# Add citation
+st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
