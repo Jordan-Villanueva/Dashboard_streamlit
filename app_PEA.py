@@ -60,5 +60,5 @@ fig.update_xaxes(tickangle=-60)
 # Use st.plotly_chart with custom width
 st.plotly_chart(fig, use_container_width=True)
 
-mention(label=f"{Fuente}", url=https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA)
+mention(label = f"[{Fuente}](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA)")
 
