@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import geopandas as gpd
+from io import BytesIO
+import zipfile
+import requests
 
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
