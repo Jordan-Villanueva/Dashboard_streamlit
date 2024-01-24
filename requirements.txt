@@ -3,4 +3,4 @@ plotly==5.3.1
 geopandas==0.10.2
 streamlit==1.15.0
 folium==0.12.1
-streamlit_folium==0.13.0
+streamlit-folium==0.16.0
