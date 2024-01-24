@@ -73,7 +73,10 @@ with zipfile.ZipFile(BytesIO(response.content), 'r') as zip_ref:
 
 # Obtener la ruta absoluta al archivo shapefile
 shapefile_path = os.path.abspath('shapefile_folder/Mexico_Estados.shp')
-
+if shapefile_path:
+        print(1)
+else:
+    print(0)
 # Cargar el shapefile
 gdf = gpd.read_file(shapefile_path)
 
