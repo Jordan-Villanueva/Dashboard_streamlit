@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import geopandas as gpd
 
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
@@ -57,6 +58,29 @@ fig.update_xaxes(tickangle=-60)
 # Usar st.plotly_chart con ancho personalizado
 st.plotly_chart(fig, use_container_width=True)
 
+# Mapa coroplético
+st.title("Mapa Coroplético de Población Económica Activa en México")
+
+# Cargar el shapefile (sustituir 'URL_DEL_ARCHIVO_CRUDO' con la URL correcta)
+shapefile_url = "https://github.com/Jordan-Villanueva/Dashboard_streamlit/blob/main/M%C3%A9xico_Estados.zip"
+gdf = gpd.read_file(shapefile_url)
+
+# Fusionar datos espaciales con datos de población económica activa
+merged_data = gdf.merge(filtered_data, left_on='ID', right_on='ID', how='left')
+
+# Crear el mapa coroplético
+fig_mapa = px.choropleth(
+    merged_data,
+    geojson=merged_data.geometry,
+    locations=merged_data.index,
+    color='Poblacion_Economicamente_Activa',
+    color_continuous_scale="Viridis",
+    labels={'Poblacion_Economicamente_Activa': 'Población (millones de habitantes)'},
+    title=f'Mapa Coroplético de Población Económica Activa en {selected_year} - Trimestre {selected_trimester}'
+)
+
+# Usar st.plotly_chart con ancho personalizado
+st.plotly_chart(fig_mapa, use_container_width=True)
+
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA)")
-
