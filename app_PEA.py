@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from streamlit_extras.mention import mention
 
 #set the whole page
 st.set_page_config(layout="wide")
@@ -58,3 +59,6 @@ fig.update_xaxes(tickangle=-60)
 
 # Use st.plotly_chart with custom width
 st.plotly_chart(fig, use_container_width=True)
+
+mention(label=f"{Fuente}", url=https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA)
+
