@@ -1,12 +1,11 @@
+# Esta es la version que integra el diagrama de barras con el mapa coropletico en streamlit, relacionando la poblacion economicamente activa.
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import geopandas as gpd
-from io import BytesIO
-import zipfile
-import requests
-import os
-
+import folium
+from streamlit_folium import folium_static
 
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
@@ -43,7 +42,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 # Filtrar datos
 filtered_data = data[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
 
-# Gráfico
+# Gráfico de barras
 fig = px.bar(
     filtered_data,
     x='Entidad_Federativa',
@@ -63,40 +62,39 @@ fig.update_xaxes(tickangle=-60)
 # Usar st.plotly_chart con ancho personalizado
 st.plotly_chart(fig, use_container_width=True)
 
+# Mapa coroplético
 st.title("Mapa Coroplético de Población Económica Activa en México")
 
-# Descargar el archivo zip del shapefile
-shapefile_zip_url = "https://github.com/Jordan-Villanueva/Dashboard_streamlit/raw/main/Mexico_Estados.zip"
-response = requests.get(shapefile_zip_url)
-with zipfile.ZipFile(BytesIO(response.content), 'r') as zip_ref:
-    zip_ref.extractall('shapefile_folder')
+# Ruta a los archivos shapefile
+shapefile_path = 'dest2019gw/dest2019gw.shp'
 
-# Obtener la ruta absoluta al archivo shapefile
-shapefile_path = os.path.abspath('shapefile_folder/Mexico_Estados.shp')
-if shapefile_path:
-        print(1)
-else:
-    print(0)
-# Cargar el shapefile
-gdf = gpd.read_file(shapefile_path)
+# Leer el archivo shapefile
+gdf = gpd.read_file(shapefile_path, encoding='utf-8')
+gdf['NOM_ENT'][4] = 'Coahuila'
+gdf['NOM_ENT'][15] = 'Michoacán'
+gdf['NOM_ENT'][29] = 'Veracruz'
 
+# Supongamos que la columna 'Entidad_Federativa' es la clave
+merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
 
-# Fusionar datos espaciales con datos de población económica activa
-merged_data = gdf.merge(filtered_data, left_on='ID', right_on='ID', how='left')
+m = folium.Map(location=[23.6260333, -102.5375005], tiles='CartoDB positron', name='Light Map', zoom_start=5,
+               attr="My Data attribution")
 
-# Crear el mapa coroplético
-fig_mapa = px.choropleth(
-    merged_data,
-    geojson=merged_data.geometry,
-    locations=merged_data.index,
-    color='Poblacion_Economicamente_Activa',
-    color_continuous_scale="Viridis",
-    labels={'Poblacion_Economicamente_Activa': 'Población (millones de habitantes)'},
-    title=f'Mapa Coroplético de Población Económica Activa en {selected_year} - Trimestre {selected_trimester}'
-)
+# Añadir la capa coroplética
+folium.Choropleth(
+    geo_data=merged_data,
+    name="choropleth",
+    data=merged_data,
+    columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
+    key_on="feature.properties.NOM_ENT",
+    fill_color="YlOrRd",
+    fill_opacity=0.7,
+    line_opacity=0.1,
+    legend_name='Poblacion_Economicamente_Activa'
+).add_to(m)
 
-# Usar st.plotly_chart con ancho personalizado
-st.plotly_chart(fig_mapa, use_container_width=True)
+# Añadir el control de capas
+folium.LayerControl().add_to(m)
 
-# Add citation
-st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA)")
+# Desplegar el mapa
+folium_static(m, width=1600, height=950)
