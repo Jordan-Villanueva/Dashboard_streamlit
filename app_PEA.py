@@ -58,12 +58,16 @@ fig.update_xaxes(tickangle=-60)
 # Usar st.plotly_chart con ancho personalizado
 st.plotly_chart(fig, use_container_width=True)
 
-# Mapa coroplético
 st.title("Mapa Coroplético de Población Económica Activa en México")
 
-# Cargar el shapefile (sustituir 'URL_DEL_ARCHIVO_CRUDO' con la URL correcta)
-shapefile_url = "https://github.com/Jordan-Villanueva/Dashboard_streamlit/blob/main/M%C3%A9xico_Estados.zip"
-gdf = gpd.read_file(shapefile_url)
+# Descargar el archivo zip del shapefile
+shapefile_zip_url = "https://github.com/Jordan-Villanueva/Dashboard_streamlit/blob/main/Mexico_Estados.zip"
+response = requests.get(shapefile_zip_url)
+with zipfile.ZipFile(BytesIO(response.content), 'r') as zip_ref:
+    zip_ref.extractall('shapefile_folder')
+
+# Cargar el shapefile
+gdf = gpd.read_file('shapefile_folder/Mexico_Estados.shp')
 
 # Fusionar datos espaciales con datos de población económica activa
 merged_data = gdf.merge(filtered_data, left_on='ID', right_on='ID', how='left')
