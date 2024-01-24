@@ -64,7 +64,7 @@ st.plotly_chart(fig, use_container_width=True)
 st.title("Mapa Coroplético de Población Económica Activa en México")
 
 # Descargar el archivo zip del shapefile
-shapefile_zip_url = "https://github.com/Jordan-Villanueva/Dashboard_streamlit/blob/main/Mexico_Estados.zip"
+shapefile_zip_url = "https://github.com/Jordan-Villanueva/Dashboard_streamlit/archive/refs/heads/main/Mexico_Estados.zip"
 response = requests.get(shapefile_zip_url)
 with zipfile.ZipFile(BytesIO(response.content), 'r') as zip_ref:
     zip_ref.extractall('shapefile_folder')
