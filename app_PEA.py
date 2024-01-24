@@ -58,8 +58,6 @@ fig.update_xaxes(tickangle=-60)
 # Usar st.plotly_chart con ancho personalizado
 st.plotly_chart(fig, use_container_width=True)
 
-# Definir la fuente
-Fuente = "Datos Gubernamentales de México"
+# Add citation
+st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA)")
 
-# Agregar la mención al final del sitio web
-mention(label=f"{Fuente}", url="https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA")
