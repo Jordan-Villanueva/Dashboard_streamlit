@@ -83,7 +83,7 @@ merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Fede
 
 
 # Crear una nueva columna con la información deseada para el tooltip
-merged_data['Tooltip'] = merged_data.apply(lambda row: f"{row['NOM_ENT']}: {row['Poblacion_Economica_Activa_Total']}", axis=1)
+merged_data['Tooltip'] = merged_data.apply(lambda row: f"{row['NOM_ENT']}: {row['Poblacion_Economicamente_Activa']}", axis=1)
 
 m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=6, attr="My Data attribution")
 
@@ -92,12 +92,12 @@ folium.Choropleth(
     geo_data=merged_data,
     name="choropleth",
     data=merged_data,
-    columns=["NOM_ENT", "Poblacion_Economica_Activa_Total"],
+    columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
     key_on="feature.properties.NOM_ENT",
     fill_color="YlOrRd",
     fill_opacity=0.7,
     line_opacity=0.1,
-    legend_name='Poblacion_Economica_Activa_Total',
+    legend_name='Poblacion Economicamente Activa',
     highlight=True,  # Para resaltar las entidades al pasar el cursor
     tooltip=folium.GeoJsonTooltip(fields=['Tooltip'], aliases=['Población Total'], localize=True, sticky=False)
 ).add_to(m)
