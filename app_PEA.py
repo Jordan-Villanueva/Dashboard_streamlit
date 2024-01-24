@@ -5,6 +5,8 @@ import geopandas as gpd
 from io import BytesIO
 import zipfile
 import requests
+import os
+
 
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
@@ -69,8 +71,12 @@ response = requests.get(shapefile_zip_url)
 with zipfile.ZipFile(BytesIO(response.content), 'r') as zip_ref:
     zip_ref.extractall('shapefile_folder')
 
+# Obtener la ruta absoluta al archivo shapefile
+shapefile_path = os.path.abspath('shapefile_folder/Mexico_Estados.shp')
+
 # Cargar el shapefile
-gdf = gpd.read_file('shapefile_folder/Mexico_Estados.shp')
+gdf = gpd.read_file(shapefile_path)
+
 
 # Fusionar datos espaciales con datos de población económica activa
 merged_data = gdf.merge(filtered_data, left_on='ID', right_on='ID', how='left')
