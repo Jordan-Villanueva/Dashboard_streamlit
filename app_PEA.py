@@ -122,14 +122,14 @@ folium.Choropleth(
     geo_data=merged_data,
     name="choropleth",
     data=merged_data,
-    columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
+    columns=["Poblacion_Economicamente_Activa"],
     key_on="properties.NOM_ENT",  # Ajuste aquí
     fill_color="YlOrRd",
     fill_opacity=0.3,
     line_opacity=0.1,
     legend_name='Poblacion Economicamente Activa',
-    highlight=True,
-    tooltip=folium.GeoJsonTooltip(fields=['NOM_ENT', 'Poblacion_Economicamente_Activa'], aliases=['Entidad Federativa', 'Población Total'], localize=True, sticky=False)
+    highlight=False,
+    tooltip=folium.GeoJsonTooltip(fields=['Poblacion_Economicamente_Activa'], aliases=['Población Total'], localize=True, sticky=False)
 ).add_to(m)
 
 folium_static(m, width=1600, height=950)
