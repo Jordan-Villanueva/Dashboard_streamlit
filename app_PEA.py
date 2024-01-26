@@ -13,7 +13,7 @@ st.set_page_config(layout="wide")
 
 # Cargar datos
 url = 'https://raw.githubusercontent.com/Jordan-Villanueva/Dashboard_Veredis/main/Tasa_de_Desocupacion.csv'
-data = pd.read_csv(url, encoding='latin-1')
+data = pd.read_csv(url, encoding='latin-1', usecols=['Entidad_Federativa', 'Periodo', 'Trimestre', 'Poblacion_Economicamente_Activa', 'Sexo'])
 data = data[(data['Entidad_Federativa'] != 'Nacional')].reset_index(drop=True)
 data = data.drop(columns=['Unnamed: 7', 'Unnamed: 8'])
 
@@ -41,7 +41,7 @@ selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, i
 st.markdown("<br>", unsafe_allow_html=True)
 
 # Filtrar datos
-filtered_data = data[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
+filtered_data = data.loc[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
 
 # Gráfico de barras
 fig = px.bar(
@@ -104,9 +104,9 @@ folium.Choropleth(
 
 
 # Añadir marcadores
-for _, row in gdf.iterrows():
+for idx, row in gdf.iterrows():
     geom_type = row['geometry'].geom_type
-    if geom_type == 'Polygon' or geom_type == 'MultiPolygon':
+    if geom_type in ['Polygon', 'MultiPolygon']:
         centroid = row['geometry'].centroid
         lat, lon = centroid.y, centroid.x
         folium.CircleMarker(
