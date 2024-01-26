@@ -1,21 +1,49 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 import geopandas as gpd
 import folium
+import plotly.express as px
 from streamlit_folium import folium_static
 from folium.plugins import MarkerCluster
 
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
 
-# Función para cargar datos
-@st.cache(ttl=3600)  # 1 hora
+@st.cache_data
 def load_data():
+    # Cargar datos y procesar una única vez
     url = 'https://raw.githubusercontent.com/Jordan-Villanueva/Dashboard_Veredis/main/Tasa_de_Desocupacion.csv'
     data = pd.read_csv(url, encoding='latin-1', usecols=['Entidad_Federativa', 'Periodo', 'Trimestre', 'Poblacion_Economicamente_Activa', 'Sexo'])
     data = data[(data['Entidad_Federativa'] != 'Nacional')].reset_index(drop=True)
     return data
+
+@st.cache_data
+def process_data(data, selected_year, selected_trimester):
+    # Filtrar datos
+    filtered_data = data.loc[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
+    
+    # Gráfico de barras
+    fig = px.bar(
+        filtered_data,
+        x='Entidad_Federativa',
+        y='Poblacion_Economicamente_Activa',
+        color='Sexo',
+        barmode='group',
+        labels={'Poblacion_Economicamente_Activa': 'Población (millones de habitantes)'},
+        color_discrete_sequence=['steelblue', 'magenta'],
+        title=f'Población Económica Activa en {selected_year} - Trimestre {selected_trimester}'
+    )
+
+    # Personalizar títulos de los ejes
+    fig.update_xaxes(title_text='Entidad Federativa')
+    fig.update_yaxes(title_text='Población (millones de habitantes)')
+    fig.update_xaxes(tickangle=-60)
+    
+    return filtered_data, fig
+
 
 # Cargar datos
 data = load_data()
@@ -43,25 +71,8 @@ selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, i
 # Separación vertical
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Filtrar datos
-filtered_data = data.loc[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
-
-# Gráfico de barras
-fig = px.bar(
-    filtered_data,
-    x='Entidad_Federativa',
-    y='Poblacion_Economicamente_Activa',
-    color='Sexo',
-    barmode='group',
-    labels={'Poblacion_Economicamente_Activa': 'Población (millones de habitantes)'},
-    color_discrete_sequence=['steelblue', 'magenta'],
-    title=f'Población Económica Activa en {selected_year} - Trimestre {selected_trimester}'
-)
-
-# Personalizar títulos de los ejes
-fig.update_xaxes(title_text='Entidad Federativa')
-fig.update_yaxes(title_text='Población (millones de habitantes)')
-fig.update_xaxes(tickangle=-60)
+# Procesar datos
+filtered_data, fig = process_data(data, selected_year, selected_trimester)
 
 # Usar st.plotly_chart con ancho personalizado
 st.plotly_chart(fig, use_container_width=True)
@@ -69,9 +80,8 @@ st.plotly_chart(fig, use_container_width=True)
 # Mapa coroplético
 st.title("Mapa Coroplético de Población Económica Activa en México")
 
-# Población total EA
-if 'processed_data' not in st.session_state:
-    st.session_state.processed_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
+#poblacion total EA
+filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
 
 # Ruta a los archivos shapefile
 shapefile_path = 'dest2019gw/dest2019gw.shp'
@@ -83,7 +93,7 @@ gdf['NOM_ENT'][15] = 'Michoacán'
 gdf['NOM_ENT'][29] = 'Veracruz'
 
 # Supongamos que la columna 'Entidad_Federativa' es la clave
-merged_data = gdf.merge(st.session_state.processed_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
+merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
 
 # Crear el mapa de folium
 m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
@@ -103,20 +113,24 @@ folium.Choropleth(
     tooltip=folium.GeoJsonTooltip(fields=['NOM_ENT', 'Poblacion_Economicamente_Activa'], aliases=['Entidad Federativa', 'Población Total'], localize=True, sticky=False)
 ).add_to(m)
 
-# Añadir marcadores
-for idx, row in gdf.iterrows():
+def add_circle_marker(row):
     geom_type = row['geometry'].geom_type
-    if geom_type in ['Polygon', 'MultiPolygon']:
+    if geom_type == 'Polygon' or geom_type == 'MultiPolygon':
         centroid = row['geometry'].centroid
         lat, lon = centroid.y, centroid.x
+        popup_text = f"{row['NOM_ENT']}: {merged_data.loc[merged_data['NOM_ENT'] == row['NOM_ENT'], 'Poblacion_Economicamente_Activa'].values[0]}"
         folium.CircleMarker(
-            location=[lat, lon], popup=f"{row['NOM_ENT']}: {merged_data.loc[merged_data['NOM_ENT'] == row['NOM_ENT'], 'Poblacion_Economicamente_Activa'].values[0]}",
+            location=[lat, lon],
+            popup=popup_text,
             radius=5,
             color='blue',
             fill=True,
             fill_color='red',
             fill_opacity=0.6
         ).add_to(m)
+
+gdf.apply(add_circle_marker, axis=1)
+
 
 # Añadir el control
 folium.LayerControl().add_to(m)
