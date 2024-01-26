@@ -108,8 +108,8 @@ folium.Choropleth(
     data=merged_data,
     columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
     key_on="properties.NOM_ENT",  # Ajuste aquí
-    fill_color="Blues",
-    fill_opacity=0.5,
+    fill_color="YlOrRd",
+    fill_opacity=0.6,
     line_opacity=0.1,
     legend_name='Poblacion Economicamente Activa',
     highlight=True).add_to(m)
@@ -123,8 +123,8 @@ def add_circle_marker(row):
         folium.CircleMarker(
             location=[lat, lon],
             popup=popup_text,
-            radius=8,
-            color='green',
+            radius=5,
+            color='blue',
             fill=True,
             fill_color='red',
             fill_opacity=0.6
