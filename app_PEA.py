@@ -8,8 +8,6 @@ import folium
 import plotly.express as px
 from streamlit_folium import folium_static
 from folium.plugins import MarkerCluster
-import time
-
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
 
@@ -74,10 +72,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 # Procesar datos
 filtered_data, fig = process_data(data, selected_year, selected_trimester)
-end_time_process_data = time.time()
-st.write(f"Tiempo para procesar datos: {end_time_process_data - start_time_process_data:.2f} segundos")
 
-start_time_create_map = time.time()
 # Usar st.plotly_chart con ancho personalizado
 st.plotly_chart(fig, use_container_width=True)
 
@@ -86,7 +81,6 @@ st.plotly_chart(fig, use_container_width=True)
 st.title("Mapa Coroplético de Población Económica Activa en México")
 
 #poblacion total EA
-start_time_create_map = time.time()
 filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
 
 # Ruta a los archivos shapefile
