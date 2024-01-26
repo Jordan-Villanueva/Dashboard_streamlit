@@ -12,7 +12,7 @@ from folium.plugins import MarkerCluster
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
 
-@st.cache_data
+@st.cache_resource
 def load_data():
     # Cargar datos y procesar una única vez
     url = 'https://raw.githubusercontent.com/Jordan-Villanueva/Dashboard_Veredis/main/Tasa_de_Desocupacion.csv'
@@ -20,7 +20,7 @@ def load_data():
     data = data[(data['Entidad_Federativa'] != 'Nacional')].reset_index(drop=True)
     return data
 
-@st.cache_data
+@st.cache_resource
 def process_data(data, selected_year, selected_trimester):
     # Filtrar datos
     filtered_data = data.loc[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
