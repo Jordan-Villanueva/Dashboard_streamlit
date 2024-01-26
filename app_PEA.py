@@ -15,7 +15,6 @@ def load_data():
     url = 'https://raw.githubusercontent.com/Jordan-Villanueva/Dashboard_Veredis/main/Tasa_de_Desocupacion.csv'
     data = pd.read_csv(url, encoding='latin-1', usecols=['Entidad_Federativa', 'Periodo', 'Trimestre', 'Poblacion_Economicamente_Activa', 'Sexo'])
     data = data[(data['Entidad_Federativa'] != 'Nacional')].reset_index(drop=True)
-    data = data.drop(columns=['Unnamed: 7', 'Unnamed: 8'])
     return data
 
 # Cargar datos
