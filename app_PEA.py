@@ -8,10 +8,13 @@ import folium
 import plotly.express as px
 from streamlit_folium import folium_static
 from folium.plugins import MarkerCluster
+import time
 
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
 
+
+start_time_load_data = time.time()
 @st.cache
 def load_data():
     # Cargar datos y procesar una única vez
@@ -20,6 +23,13 @@ def load_data():
     data = data[(data['Entidad_Federativa'] != 'Nacional')].reset_index(drop=True)
     return data
 
+# Cargar datos
+data = load_data()
+end_time_load_data = time.time()
+st.write(f"Tiempo para cargar datos: {end_time_load_data - start_time_load_data:.2f} segundos")
+
+
+start_time_process_data = time.time()
 @st.cache
 def process_data(data, selected_year, selected_trimester):
     # Filtrar datos
@@ -45,8 +55,7 @@ def process_data(data, selected_year, selected_trimester):
     return filtered_data, fig
 
 
-# Cargar datos
-data = load_data()
+
 
 # Años y trimestres únicos
 unique_years = data['Periodo'].unique()
@@ -73,70 +82,15 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 # Procesar datos
 filtered_data, fig = process_data(data, selected_year, selected_trimester)
+end_time_process_data = time.time()
+st.write(f"Tiempo para procesar datos: {end_time_process_data - start_time_process_data:.2f} segundos")
 
+start_time_create_map = time.time()
 # Usar st.plotly_chart con ancho personalizado
 st.plotly_chart(fig, use_container_width=True)
+end_time_process_data = time.time()
+st.write(f"Tiempo para graficar: {end_time_process_data - start_time_process_data:.2f} segundos")
 
-# Mapa coroplético
-st.title("Mapa Coroplético de Población Económica Activa en México")
-
-#poblacion total EA
-filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
-
-# Ruta a los archivos shapefile
-shapefile_path = 'dest2019gw/dest2019gw.shp'
-
-# Leer el archivo shapefile
-gdf = gpd.read_file(shapefile_path, encoding='utf-8')
-gdf['NOM_ENT'][4] = 'Coahuila'
-gdf['NOM_ENT'][15] = 'Michoacán'
-gdf['NOM_ENT'][29] = 'Veracruz'
-
-# Supongamos que la columna 'Entidad_Federativa' es la clave
-merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
-
-# Crear el mapa de folium
-m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
-
-# Añadir la capa coroplética con GeoJsonTooltip
-folium.Choropleth(
-    geo_data=merged_data,
-    name="choropleth",
-    data=merged_data,
-    columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
-    key_on="properties.NOM_ENT",  # Ajuste aquí
-    fill_color="YlOrRd",
-    fill_opacity=0.7,
-    line_opacity=0.1,
-    legend_name='Poblacion Economicamente Activa',
-    highlight=True,
-    tooltip=folium.GeoJsonTooltip(fields=['NOM_ENT', 'Poblacion_Economicamente_Activa'], aliases=['Entidad Federativa', 'Población Total'], localize=True, sticky=False)
-).add_to(m)
-
-def add_circle_marker(row):
-    geom_type = row['geometry'].geom_type
-    if geom_type == 'Polygon' or geom_type == 'MultiPolygon':
-        centroid = row['geometry'].centroid
-        lat, lon = centroid.y, centroid.x
-        popup_text = f"{row['NOM_ENT']}: {merged_data.loc[merged_data['NOM_ENT'] == row['NOM_ENT'], 'Poblacion_Economicamente_Activa'].values[0]}"
-        folium.CircleMarker(
-            location=[lat, lon],
-            popup=popup_text,
-            radius=5,
-            color='blue',
-            fill=True,
-            fill_color='red',
-            fill_opacity=0.6
-        ).add_to(m)
-
-gdf.apply(add_circle_marker, axis=1)
-
-
-# Añadir el control
-folium.LayerControl().add_to(m)
-
-# Desplegar el mapa
-folium_static(m, width=1600, height=950)
 
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
