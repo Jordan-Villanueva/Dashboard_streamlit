@@ -111,6 +111,9 @@ gdf['NOM_ENT'][29] = 'Veracruz'
 # Supongamos que la columna 'Entidad_Federativa' es la clave
 merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
 
+# Simplificar la geometría
+gdf['geometry'] = gdf['geometry'].simplify(tolerance=0.005)
+
 # Crear el mapa de folium
 m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
 
@@ -122,7 +125,7 @@ folium.Choropleth(
     columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
     key_on="properties.NOM_ENT",  # Ajuste aquí
     fill_color="YlOrRd",
-    fill_opacity=0.7,
+    fill_opacity=0.3,
     line_opacity=0.1,
     legend_name='Poblacion Economicamente Activa',
     highlight=True,
