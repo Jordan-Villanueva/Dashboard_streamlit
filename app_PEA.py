@@ -6,6 +6,7 @@ import plotly.express as px
 import geopandas as gpd
 import folium
 from streamlit_folium import folium_static
+from folium.plugins import MarkerCluster
 
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
@@ -65,6 +66,9 @@ st.plotly_chart(fig, use_container_width=True)
 # Mapa coroplético
 st.title("Mapa Coroplético de Población Económica Activa en México")
 
+#poblacion total EA
+filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
+
 # Ruta a los archivos shapefile
 shapefile_path = 'dest2019gw/dest2019gw.shp'
 
@@ -76,16 +80,12 @@ gdf['NOM_ENT'][29] = 'Veracruz'
 
 #CODIGO NUEVO A PARTIR DE AQUI (O REEMPLAZAR POR ANTERIOR)
 
-# Calcular la población total
-filtered_data=filtered_data.groupby('Entidad_Federativa').sum()
 # Supongamos que la columna 'Entidad_Federativa' es la clave
 merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
 
 
-# Crear una nueva columna con la información deseada para el tooltip
-merged_data['Tooltip'] = merged_data.apply(lambda row: f"{row['NOM_ENT']}: {row['Poblacion_Economicamente_Activa']}", axis=1)
-
-m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=6, attr="My Data attribution")
+# Crear el mapa de folium
+m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
 
 # Añadir la capa coroplética con GeoJsonTooltip
 folium.Choropleth(
@@ -93,20 +93,37 @@ folium.Choropleth(
     name="choropleth",
     data=merged_data,
     columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
-    key_on="feature.properties.NOM_ENT",
+    key_on="properties.NOM_ENT",  # Ajuste aquí
     fill_color="YlOrRd",
     fill_opacity=0.7,
     line_opacity=0.1,
     legend_name='Poblacion Economicamente Activa',
-    highlight=True,  # Para resaltar las entidades al pasar el cursor
-    tooltip=folium.GeoJsonTooltip(fields=['Tooltip'], aliases=['Población Total'], localize=True, sticky=False)
+    highlight=True,
+    tooltip=folium.GeoJsonTooltip(fields=['NOM_ENT', 'Poblacion_Economicamente_Activa'], aliases=['Entidad Federativa', 'Población Total'], localize=True, sticky=False)
 ).add_to(m)
 
-# Añadir el control de capas
+
+# Añadir marcadores
+for _, row in gdf.iterrows():
+    geom_type = row['geometry'].geom_type
+    if geom_type == 'Polygon' or geom_type == 'MultiPolygon':
+        centroid = row['geometry'].centroid
+        lat, lon = centroid.y, centroid.x
+        folium.CircleMarker(
+            location=[lat, lon], popup=f"{row['NOM_ENT']}: {merged_data.loc[merged_data['NOM_ENT'] == row['NOM_ENT'], 'Poblacion_Economicamente_Activa'].values[0]}",
+            radius=5,
+            color='blue',
+            fill=True,
+            fill_color='red',
+            fill_opacity=0.6
+        ).add_to(m)
+
+# Añadir el control
 folium.LayerControl().add_to(m)
 
 # Desplegar el mapa
 folium_static(m, width=1600, height=950)
+
 
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
