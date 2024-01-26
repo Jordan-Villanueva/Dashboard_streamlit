@@ -13,8 +13,6 @@ import time
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
 
-
-start_time_load_data = time.time()
 @st.cache
 def load_data():
     # Cargar datos y procesar una única vez
@@ -25,11 +23,7 @@ def load_data():
 
 # Cargar datos
 data = load_data()
-end_time_load_data = time.time()
-st.write(f"Tiempo para cargar datos: {end_time_load_data - start_time_load_data:.2f} segundos")
 
-
-start_time_process_data = time.time()
 @st.cache
 def process_data(data, selected_year, selected_trimester):
     # Filtrar datos
@@ -53,8 +47,6 @@ def process_data(data, selected_year, selected_trimester):
     fig.update_xaxes(tickangle=-60)
     
     return filtered_data, fig
-
-
 
 
 # Años y trimestres únicos
@@ -88,8 +80,6 @@ st.write(f"Tiempo para procesar datos: {end_time_process_data - start_time_proce
 start_time_create_map = time.time()
 # Usar st.plotly_chart con ancho personalizado
 st.plotly_chart(fig, use_container_width=True)
-end_time_process_data = time.time()
-st.write(f"Tiempo para graficar: {end_time_process_data - start_time_process_data:.2f} segundos")
 
 
 # Mapa coroplético
@@ -124,11 +114,33 @@ folium.Choropleth(
     data=merged_data,
     columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
     key_on="properties.NOM_ENT",  # Ajuste aquí
-    fill_color="YlOrRd",
-    fill_opacity=0.2,
+    fill_color="Blues",
+    fill_opacity=0.5,
     line_opacity=0.1,
     legend_name='Poblacion Economicamente Activa',
     highlight=True).add_to(m)
+
+def add_circle_marker(row):
+    geom_type = row['geometry'].geom_type
+    if geom_type == 'Polygon' or geom_type == 'MultiPolygon':
+        centroid = row['geometry'].centroid
+        lat, lon = centroid.y, centroid.x
+        popup_text = f"{row['NOM_ENT']}: {merged_data.loc[merged_data['NOM_ENT'] == row['NOM_ENT'], 'Poblacion_Economicamente_Activa'].values[0]}"
+        folium.CircleMarker(
+            location=[lat, lon],
+            popup=popup_text,
+            radius=8,
+            color='green',
+            fill=True,
+            fill_color='red',
+            fill_opacity=0.6
+        ).add_to(m)
+
+gdf.apply(add_circle_marker, axis=1)
+
+
+# Añadir el control
+folium.LayerControl().add_to(m)
 
 folium_static(m, width=1600, height=950)
 
