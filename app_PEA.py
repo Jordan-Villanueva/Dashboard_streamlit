@@ -92,5 +92,28 @@ end_time_process_data = time.time()
 st.write(f"Tiempo para graficar: {end_time_process_data - start_time_process_data:.2f} segundos")
 
 
+# Mapa coroplético
+st.title("Mapa Coroplético de Población Económica Activa en México")
+
+#poblacion total EA
+start_time_create_map = time.time()
+filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
+
+# Ruta a los archivos shapefile
+shapefile_path = 'dest2019gw/dest2019gw.shp'
+
+# Leer el archivo shapefile
+gdf = gpd.read_file(shapefile_path, encoding='utf-8')
+gdf['NOM_ENT'][4] = 'Coahuila'
+gdf['NOM_ENT'][15] = 'Michoacán'
+gdf['NOM_ENT'][29] = 'Veracruz'
+
+# Supongamos que la columna 'Entidad_Federativa' es la clave
+merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
+
+# Crear el mapa de folium
+m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
+
+
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
