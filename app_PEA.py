@@ -113,7 +113,7 @@ merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Fede
 
 # Crear el mapa de folium
 m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
-
+folium_static(m, width=1600, height=950)
 
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
