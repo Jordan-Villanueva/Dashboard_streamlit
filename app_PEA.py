@@ -1,5 +1,3 @@
-# Esta es la version que integra el diagrama de barras con el mapa coropletico en streamlit, relacionando la poblacion economicamente activa.
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -11,11 +9,17 @@ from folium.plugins import MarkerCluster
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
 
+# Función para cargar datos
+@st.cache(ttl=3600)  # 1 hora
+def load_data():
+    url = 'https://raw.githubusercontent.com/Jordan-Villanueva/Dashboard_Veredis/main/Tasa_de_Desocupacion.csv'
+    data = pd.read_csv(url, encoding='latin-1', usecols=['Entidad_Federativa', 'Periodo', 'Trimestre', 'Poblacion_Economicamente_Activa', 'Sexo'])
+    data = data[(data['Entidad_Federativa'] != 'Nacional')].reset_index(drop=True)
+    data = data.drop(columns=['Unnamed: 7', 'Unnamed: 8'])
+    return data
+
 # Cargar datos
-url = 'https://raw.githubusercontent.com/Jordan-Villanueva/Dashboard_Veredis/main/Tasa_de_Desocupacion.csv'
-data = pd.read_csv(url, encoding='latin-1', usecols=['Entidad_Federativa', 'Periodo', 'Trimestre', 'Poblacion_Economicamente_Activa', 'Sexo'])
-data = data[(data['Entidad_Federativa'] != 'Nacional')].reset_index(drop=True)
-data = data.drop(columns=['Unnamed: 7', 'Unnamed: 8'])
+data = load_data()
 
 # Años y trimestres únicos
 unique_years = data['Periodo'].unique()
@@ -66,8 +70,9 @@ st.plotly_chart(fig, use_container_width=True)
 # Mapa coroplético
 st.title("Mapa Coroplético de Población Económica Activa en México")
 
-#poblacion total EA
-filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
+# Población total EA
+if 'processed_data' not in st.session_state:
+    st.session_state.processed_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
 
 # Ruta a los archivos shapefile
 shapefile_path = 'dest2019gw/dest2019gw.shp'
@@ -78,11 +83,8 @@ gdf['NOM_ENT'][4] = 'Coahuila'
 gdf['NOM_ENT'][15] = 'Michoacán'
 gdf['NOM_ENT'][29] = 'Veracruz'
 
-#CODIGO NUEVO A PARTIR DE AQUI (O REEMPLAZAR POR ANTERIOR)
-
 # Supongamos que la columna 'Entidad_Federativa' es la clave
-merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
-
+merged_data = gdf.merge(st.session_state.processed_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
 
 # Crear el mapa de folium
 m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
@@ -101,7 +103,6 @@ folium.Choropleth(
     highlight=True,
     tooltip=folium.GeoJsonTooltip(fields=['NOM_ENT', 'Poblacion_Economicamente_Activa'], aliases=['Entidad Federativa', 'Población Total'], localize=True, sticky=False)
 ).add_to(m)
-
 
 # Añadir marcadores
 for idx, row in gdf.iterrows():
@@ -123,7 +124,6 @@ folium.LayerControl().add_to(m)
 
 # Desplegar el mapa
 folium_static(m, width=1600, height=950)
-
 
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
