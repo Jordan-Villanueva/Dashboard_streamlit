@@ -78,7 +78,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 
 # Mapa coroplético
-st.title("Mapa Coroplético de Población Económica Activa en México")
+st.title(f'Mapa Coroplético de Población Económica Activa en México en {selected_year} - Trimestre {selected_trimester}')
 
 #poblacion total EA
 filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
