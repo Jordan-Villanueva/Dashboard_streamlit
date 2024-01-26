@@ -119,7 +119,7 @@ m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name=
 
 # Añadir la capa coroplética con GeoJsonTooltip
 folium.Choropleth(
-    geo_data=merged_data,
+    geo_data=gdf,
     name="choropleth",
     data=merged_data,
     columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
@@ -128,9 +128,7 @@ folium.Choropleth(
     fill_opacity=0.2,
     line_opacity=0.1,
     legend_name='Poblacion Economicamente Activa',
-    highlight=True,
-    tooltip=folium.GeoJsonTooltip(fields=['NOM_ENT', 'Poblacion_Economicamente_Activa'], aliases=['Entidad Federativa', 'Población Total'], localize=True, sticky=False)
-).add_to(m)
+    highlight=True).add_to(m)
 
 folium_static(m, width=1600, height=950)
 
