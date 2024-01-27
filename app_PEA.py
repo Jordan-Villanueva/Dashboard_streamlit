@@ -51,23 +51,21 @@ def process_data(data, selected_year, selected_trimester):
 unique_years = data['Periodo'].unique()
 
 # Diseño de la aplicación
-st.markdown("<h1 style='text-align: center;'>Población Económica Activa en México</h1>", unsafe_allow_html=True)
-
-# Dropdowns para el año y trimestre en dos columnas
-col1, col2 = st.columns(2)
+st.title("Población Económica Activa en México")
 
 # Dropdown para el año
-with col1:
-    selected_year = st.selectbox("Seleccionar Año:", unique_years, index=len(unique_years)-1)
+selected_year = st.selectbox("Seleccionar Año:", unique_years, index=len(unique_years)-1)
+
+# Separación vertical
+st.markdown("<br>", unsafe_allow_html=True)
 
 # Dropdown para el trimestre
-with col2:
-    if selected_year == 2023:
-        trimester_options = [1, 2]
-    else:
-        trimester_options = data[data['Periodo'] == selected_year]['Trimestre'].unique()
+if selected_year == 2023:
+    trimester_options = [1, 2]
+else:
+    trimester_options = data['Trimestre'].unique()
 
-    selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, index=len(trimester_options)-1)
+selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, index=len(trimester_options)-1)
 
 # Separación vertical
 st.markdown("<br>", unsafe_allow_html=True)
@@ -80,7 +78,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 
 # Mapa coroplético
-st.markdown(f"<h1 style='text-align: center;'>Mapa Coroplético de Población Económica Activa en México en {selected_year} - Trimestre {selected_trimester}</h1>", unsafe_allow_html=True)
+st.title(f'Mapa Coroplético de Población Económica Activa en México en {selected_year} - Trimestre {selected_trimester}')
 
 #poblacion total EA
 filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
@@ -111,7 +109,7 @@ folium.Choropleth(
     columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
     key_on="properties.NOM_ENT",  # Ajuste aquí
     fill_color="YlOrRd",
-    fill_opacity=0.7,
+    fill_opacity=0.6,
     line_opacity=0.1,
     legend_name='Poblacion Economicamente Activa',
     highlight=True).add_to(m)
@@ -138,7 +136,7 @@ gdf.apply(add_circle_marker, axis=1)
 # Añadir el control
 folium.LayerControl().add_to(m)
 
-folium_static(m, width=800, height=600)
+folium_static(m, width=1600, height=950)
 
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
