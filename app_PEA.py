@@ -47,6 +47,94 @@ def process_data(data, selected_year, selected_trimester):
     
     return filtered_data, fig
 
+def st_folium(
+    fig: folium.MacroElement,
+    key: str | None = None,
+    height: int = 700,
+    width: int | None = 500,
+    returned_objects: Iterable[str] | None = None,
+    zoom: int | None = None,
+    center: tuple[float, float] | None = None,
+    feature_group_to_add: list[folium.FeatureGroup] | folium.FeatureGroup | None = None,
+    return_on_hover: bool = False,
+    use_container_width: bool = False,
+    layer_control: folium.LayerControl | None = None,
+    debug: bool = False,
+):
+    """Display a Folium object in Streamlit, returning data as user interacts
+    with app.
+    Parameters
+    ----------
+    fig  : folium.Map or folium.Figure
+        Geospatial visualization to render
+    key: str or None
+        An optional key that uniquely identifies this component. If this is
+        None, and the component's arguments are changed, the component will
+        be re-mounted in the Streamlit frontend and lose its current state.
+    returned_objects: Iterable
+        A list of folium objects (as keys of the returned dictionart) that will be
+        returned to the user when they interact with the map. If None, all folium
+        objects will be returned. This is mainly useful for when you only want your
+        streamlit app to rerun under certain conditions, and not every time the user
+        interacts with the map. If an object not in returned_objects changes on the map,
+        the app will not rerun.
+    zoom: int or None
+        The zoom level of the map. If None, the zoom level will be set to the
+        default zoom level of the map. NOTE that if this zoom level is changed, it
+        will *not* reload the map, but simply dynamically change the zoom level.
+    center: tuple(float, float) or None
+        The center of the map. If None, the center will be set to the default
+        center of the map. NOTE that if this center is changed, it will *not* reload
+        the map, but simply dynamically change the center.
+    feature_group_to_add: List[folium.FeatureGroup] or folium.FeatureGroup or None
+        If you want to dynamically add features to a feature group, you can pass
+        the feature group here. NOTE that if you add a feature to the map, it
+        will *not* reload the map, but simply dynamically add the feature.
+    return_on_hover: bool
+        If True, the app will rerun when the user hovers over the map, not
+        just when they click on it. This is useful if you want to dynamically
+        update your app based on where the user is hovering. NOTE: This may cause
+        performance issues if the app is rerunning too often.
+    use_container_width: bool
+        If True, set the width of the map to the width of the current container.
+        This overrides the `width` parameter.
+    layer_control: folium.LayerControl or None
+        If you want to have layer control for dynamically added layers, you can
+        pass the layer control here.
+    debug: bool
+        If True, print out the html and javascript code used to render the map with
+        st.code
+    Returns
+    -------
+    dict
+        Selected data from Folium/leaflet.js interactions in browser
+    """
+    # Call through to our private component function. Arguments we pass here
+    # will be sent to the frontend, where they'll be available in an "args"
+    # dictionary.
+    #
+    # "default" is a special argument that specifies the initial return
+    # value of the component before the user has interacted with it.
+
+    if use_container_width:
+        width = None
+
+    folium_map: folium.Map = fig  # type: ignore
+
+    # handle the case where you pass in a figure rather than a map
+    # this assumes that a map is the first child
+    if not (isinstance(fig, folium.Map) or isinstance(fig, folium.plugins.DualMap)):
+        folium_map = list(fig._children.values())[0]
+
+    folium_map.render()
+
+    leaflet = _get_map_string(folium_map)  # type: ignore
+
+    html = _get_siblings(folium_map)
+
+    m_id = get_full_id(folium_map)
+
+
 # Años y trimestres únicos
 unique_years = data['Periodo'].unique()
 
