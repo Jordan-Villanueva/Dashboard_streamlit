@@ -111,7 +111,7 @@ folium.Choropleth(
     columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
     key_on="properties.NOM_ENT",  # Ajuste aquí
     fill_color="YlOrRd",
-    fill_opacity=0.6,
+    fill_opacity=0.7,
     line_opacity=0.1,
     legend_name='Poblacion Economicamente Activa',
     highlight=True).add_to(m)
