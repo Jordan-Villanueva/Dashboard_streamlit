@@ -7,6 +7,7 @@ import geopandas as gpd
 import folium
 import plotly.express as px
 from streamlit_folium import folium_static
+from streamlit.components.v1 import components
 from folium.plugins import MarkerCluster
 
 # Establecer la configuración de la página
@@ -140,8 +141,9 @@ with centered_container:
     # Añadir el control
     folium.LayerControl().add_to(m)        
 
-    # Display the map using folium_static
-    folium_static(m, width=800, height=600)
+    folium_map_html = m._repr_html_()
+
+    st.components.v1.html(folium_map_html, height=600) 
 
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
