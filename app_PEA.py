@@ -8,6 +8,7 @@ import folium
 import plotly.express as px
 from streamlit_folium import folium_static
 from folium.plugins import MarkerCluster
+
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
 
@@ -46,7 +47,6 @@ def process_data(data, selected_year, selected_trimester):
     
     return filtered_data, fig
 
-
 # Años y trimestres únicos
 unique_years = data['Periodo'].unique()
 
@@ -76,7 +76,6 @@ filtered_data, fig = process_data(data, selected_year, selected_trimester)
 # Usar st.plotly_chart con ancho personalizado
 st.plotly_chart(fig, use_container_width=True)
 
-
 # Mapa coroplético
 st.title(f'Mapa Coroplético de Población Económica Activa en México en {selected_year} - Trimestre {selected_trimester}')
 
@@ -98,45 +97,51 @@ merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Fede
 # Simplificar la geometría
 gdf['geometry'] = gdf['geometry'].simplify(tolerance=0.005)
 
-# Crear el mapa de folium
-m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
+# Create a centered container
+centered_container = st.container()
 
-# Añadir la capa coroplética con GeoJsonTooltip
-folium.Choropleth(
-    geo_data=gdf,
-    name="choropleth",
-    data=merged_data,
-    columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
-    key_on="properties.NOM_ENT",  # Ajuste aquí
-    fill_color="YlOrRd",
-    fill_opacity=0.6,
-    line_opacity=0.1,
-    legend_name='Poblacion Economicamente Activa',
-    highlight=True).add_to(m)
+# Inside the container, create the map
+with centered_container:
+    # Create the map of folium
+    m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', zoom_start=5, attr="My Data attribution")
 
-def add_circle_marker(row):
-    geom_type = row['geometry'].geom_type
-    if geom_type == 'Polygon' or geom_type == 'MultiPolygon':
-        centroid = row['geometry'].centroid
-        lat, lon = centroid.y, centroid.x
-        popup_text = f"{row['NOM_ENT']}: {merged_data.loc[merged_data['NOM_ENT'] == row['NOM_ENT'], 'Poblacion_Economicamente_Activa'].values[0]}"
-        folium.CircleMarker(
-            location=[lat, lon],
-            popup=popup_text,
-            radius=5,
-            color='blue',
-            fill=True,
-            fill_color='red',
-            fill_opacity=0.6
-        ).add_to(m)
+    # Your map-related code (Choropleth, MarkerCluster, etc.) goes here
+    folium.Choropleth(
+        geo_data=gdf,
+        name="choropleth",
+        data=merged_data,
+        columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
+        key_on="properties.NOM_ENT",  # Ajuste aquí
+        fill_color="YlOrRd",
+        fill_opacity=0.6,
+        line_opacity=0.1,
+        legend_name='Poblacion Economicamente Activa',
+        highlight=True
+    ).add_to(m)
 
-gdf.apply(add_circle_marker, axis=1)
+    def add_circle_marker(row):
+        geom_type = row['geometry'].geom_type
+        if geom_type == 'Polygon' or geom_type == 'MultiPolygon':
+            centroid = row['geometry'].centroid
+            lat, lon = centroid.y, centroid.x
+            popup_text = f"{row['NOM_ENT']}: {merged_data.loc[merged_data['NOM_ENT'] == row['NOM_ENT'], 'Poblacion_Economicamente_Activa'].values[0]}"
+            folium.CircleMarker(
+                location=[lat, lon],
+                popup=popup_text,
+                radius=5,
+                color='blue',
+                fill=True,
+                fill_color='red',
+                fill_opacity=0.6
+            ).add_to(m)
 
+    gdf.apply(add_circle_marker, axis=1)
 
-# Añadir el control
-folium.LayerControl().add_to(m)
+    # Añadir el control
+    folium.LayerControl().add_to(m)        
 
-folium_static(m, width=1600, height=950)
+    # Display the map using folium_static
+    folium_static(m, width=800, height=600)
 
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
