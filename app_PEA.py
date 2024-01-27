@@ -140,7 +140,7 @@ with centered_container:
 
     # Añadir el control
     folium.LayerControl().add_to(m)        
-    init.st_folium(
+    st_folium(
     m,
     center=st.session_state["center"],
     zoom=st.session_state["zoom"],
