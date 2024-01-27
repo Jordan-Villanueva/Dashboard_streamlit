@@ -143,7 +143,7 @@ with centered_container:
 
     folium_map_html = m._repr_html_()
 
-    st.components.v1.html(folium_map_html, height=600) 
+    st.components.v1.html(folium_map_html, height=800) 
 
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
