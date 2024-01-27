@@ -51,21 +51,23 @@ def process_data(data, selected_year, selected_trimester):
 unique_years = data['Periodo'].unique()
 
 # Diseño de la aplicación
-st.title("Población Económica Activa en México")
+st.markdown("<h1 style='text-align: center;'>Población Económica Activa en México</h1>", unsafe_allow_html=True)
+
+# Dropdowns para el año y trimestre en dos columnas
+col1, col2 = st.columns(2)
 
 # Dropdown para el año
-selected_year = st.selectbox("Seleccionar Año:", unique_years, index=len(unique_years)-1)
-
-# Separación vertical
-st.markdown("<br>", unsafe_allow_html=True)
+with col1:
+    selected_year = st.selectbox("Seleccionar Año:", unique_years, index=len(unique_years)-1)
 
 # Dropdown para el trimestre
-if selected_year == 2023:
-    trimester_options = [1, 2]
-else:
-    trimester_options = data['Trimestre'].unique()
+with col2:
+    if selected_year == 2023:
+        trimester_options = [1, 2]
+    else:
+        trimester_options = data[data['Periodo'] == selected_year]['Trimestre'].unique()
 
-selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, index=len(trimester_options)-1)
+    selected_trimester = st.selectbox("Seleccionar Trimestre:", trimester_options, index=len(trimester_options)-1)
 
 # Separación vertical
 st.markdown("<br>", unsafe_allow_html=True)
@@ -78,7 +80,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 
 # Mapa coroplético
-st.title(f'Mapa Coroplético de Población Económica Activa en México en {selected_year} - Trimestre {selected_trimester}')
+st.markdown(f"<h1 style='text-align: center;'>Mapa Coroplético de Población Económica Activa en México en {selected_year} - Trimestre {selected_trimester}</h1>", unsafe_allow_html=True)
 
 #poblacion total EA
 filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
@@ -99,7 +101,7 @@ merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Fede
 gdf['geometry'] = gdf['geometry'].simplify(tolerance=0.005)
 
 # Crear el mapa de folium
-m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=6, attr="My Data attribution")
+m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
 
 # Añadir la capa coroplética con GeoJsonTooltip
 folium.Choropleth(
