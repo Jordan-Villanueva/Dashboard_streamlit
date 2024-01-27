@@ -99,7 +99,7 @@ merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Fede
 gdf['geometry'] = gdf['geometry'].simplify(tolerance=0.005)
 
 # Crear el mapa de folium
-m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=5, attr="My Data attribution")
+m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', name='Light Map', zoom_start=6, attr="My Data attribution")
 
 # Añadir la capa coroplética con GeoJsonTooltip
 folium.Choropleth(
