@@ -138,7 +138,7 @@ gdf.apply(add_circle_marker, axis=1)
 # Añadir el control
 folium.LayerControl().add_to(m)
 
-folium_static(m, width=1600, height=950)
+folium_static(m, width=800, height=600)
 
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
