@@ -139,9 +139,16 @@ with centered_container:
 
     # Añadir el control
     folium.LayerControl().add_to(m)        
-
+    st_folium(
+    m,
+    center=st.session_state["center"],
+    zoom=st.session_state["zoom"],
+    key="new",
+    height=400,
+    width=700)
+    
     # Display the map using folium_static
-    folium_static(m, width=800, height=600)
-
+    # folium_static(m, width=800, height=600)
+    
 # Add citation
 st.markdown("Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
