@@ -13,7 +13,7 @@ import json
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
 
-@st.cache
+@st.cache_data
 def load_data():
     # Cargar datos y procesar una única vez
     url = 'https://raw.githubusercontent.com/Jordan-Villanueva/Dashboard_Veredis/main/Tasa_de_Desocupacion.csv'
@@ -24,7 +24,7 @@ def load_data():
 # Cargar datos
 data = load_data()
 
-@st.cache
+@st.cache_data
 def process_data(data, selected_year, selected_trimester):
     # Filtrar datos
     filtered_data = data.loc[(data['Periodo'] == selected_year) & (data['Trimestre'] == selected_trimester)]
@@ -80,76 +80,110 @@ st.plotly_chart(fig, use_container_width=True)
 # Mapa coroplético
 st.title(f'Mapa Coroplético de Población Económica Activa en México en {selected_year} - Trimestre {selected_trimester}')
 
-#poblacion total EA
+# poblacion total EA
 filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
 
-# Cargar archivo GeoJSON (asegúrate de que esté en el mismo folder que app_PEA.py)
-with open("mexico_estados.geojson", "r", encoding='utf-8') as f:
-    geojson_data = json.load(f)
+# Cargar archivos GeoJSON (asegúrate de que estén en el mismo folder que app_PEA.py)
+with open("propiedades.geojson", "r", encoding='utf-8') as f1:
+    geojson_data = json.load(f1)
 
-# Convertimos a DataFrame la info del GeoJSON para poder hacer el merge
+with open("geometrias.geojson", "r", encoding="utf-8") as f2:
+    geom_data = json.load(f2)
+
+# Combinar features (propiedades + geometrías)
+combined_features = []
+for prop, geom in zip(geojson_data["features"], geom_data["geometries"]):
+    combined = {
+        "type": "Feature",
+        "properties": prop["properties"],
+        "geometry": geom  # geom is already a geometry object
+    }
+    combined_features.append(combined)
+
+# Crear nuevo GeoJSON combinado
+combined_geojson = {
+    "type": "FeatureCollection",
+    "features": combined_features
+}
+
+# Convertir la info del GeoJSON combinado a DataFrame para merge
 estado_list = []
-for feature in geojson_data["features"]:
+for feature in combined_geojson["features"]:
     estado = feature["properties"]["NOM_ENT"]
     estado_list.append(estado)
+
 geo_df = pd.DataFrame({"NOM_ENT": estado_list})
 
-# Normalizar nombres para hacer el merge
+# Normalizar nombres para hacer merge
 geo_df['NOM_ENT'] = geo_df['NOM_ENT'].replace({
     "Coahuila de Zaragoza": "Coahuila",
     "Michoacán de Ocampo": "Michoacán",
     "Veracruz de Ignacio de la Llave": "Veracruz"
 })
 
-# Merge con tus datos
+# Merge con datos de población
 merged_data = geo_df.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
 
-# Create a centered container
+# Crear contenedor para el mapa
 centered_container = st.container()
 
-# Inside the container, create the map
 with centered_container:
-    # Create the map of folium
+    # Crear mapa base
     m = folium.Map(location=[23.6260333, -102.5375005], tiles='OpenStreetMap', zoom_start=5, attr="My Data attribution")
 
-    # Your map-related code (Choropleth, MarkerCluster, etc.) goes here
+    # Añadir coroplético
     folium.Choropleth(
-        geo_data=geojson_data,
+        geo_data=combined_geojson,
         name="choropleth",
         data=merged_data,
         columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
-        key_on="properties.NOM_ENT",  # Ajuste aquí
+        key_on="properties.NOM_ENT",
         fill_color="YlOrRd",
         fill_opacity=0.6,
         line_opacity=0.1,
-        legend_name='Poblacion Economicamente Activa',
+        legend_name='Población Económica Activa',
         highlight=True
     ).add_to(m)
 
-    def add_circle_marker(row):
-        geom_type = row['geometry'].geom_type
-        if geom_type == 'Polygon' or geom_type == 'MultiPolygon':
-            centroid = row['geometry'].centroid
-            lat, lon = centroid.y, centroid.x
-            popup_text = f"{row['NOM_ENT']}: {merged_data.loc[merged_data['NOM_ENT'] == row['NOM_ENT'], 'Poblacion_Economicamente_Activa'].values[0]}"
-            folium.CircleMarker(
-                location=[lat, lon],
-                popup=popup_text,
-                radius=5,
-                color='blue',
-                fill=True,
-                fill_color='red',
-                fill_opacity=0.6
-            ).add_to(m)
+    # Agregar marcadores en el centroide aproximado de cada estado
+    for feature in combined_geojson["features"]:
+        nom_ent = feature["properties"]["NOM_ENT"]
+        geom = feature["geometry"]
 
-    gdf.apply(add_circle_marker, axis=1)
+        geom_type = geom["type"]
+        coords = None
 
-    # Añadir el control
-    folium.LayerControl().add_to(m)        
+        if geom_type == "Polygon":
+            coords = geom["coordinates"][0]  # Primer anillo exterior
+        elif geom_type == "MultiPolygon":
+            coords = geom["coordinates"][0][0]  # Primer anillo del primer polígono
 
+        if coords:
+            # Calcular centroide simple como promedio de puntos
+            lon = sum(p[0] for p in coords) / len(coords)
+            lat = sum(p[1] for p in coords) / len(coords)
+
+            pop = filtered_data.loc[filtered_data["Entidad_Federativa"] == nom_ent, "Poblacion_Economicamente_Activa"]
+            if not pop.empty:
+                folium.CircleMarker(
+                    location=[lat, lon],
+                    radius=5,
+                    popup=f"{nom_ent}: {int(pop.values[0]):,}",
+                    color='blue',
+                    fill=True,
+                    fill_color='red',
+                    fill_opacity=0.6
+                ).add_to(m)
+
+    # Mostrar mapa
+    folium_static(m)
+
+    # Añadir control de capas
+    folium.LayerControl().add_to(m)
+
+    # También mostrar HTML embebido (opcional)
     folium_map_html = m._repr_html_()
+    st.components.v1.html(folium_map_html, height=800)
 
-    st.components.v1.html(folium_map_html, height=800) 
-
-# Add citation
+# Añadir cita
 st.markdown("Creado por Jordan Ortiz. Datos obtenidos de [Datos Gubernamentales de México](https://datos.gob.mx/busca/api/3/action/package_search?q=BUSQUEDA) y [Datos CONABIO](http://geoportal.conabio.gob.mx/metadatos/doc/html/dest2019gw.html)")
