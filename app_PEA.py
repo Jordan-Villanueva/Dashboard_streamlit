@@ -175,9 +175,6 @@ with centered_container:
                     fill_opacity=0.6
                 ).add_to(m)
 
-    # Mostrar mapa
-    folium_static(m)
-
     # Añadir control de capas
     folium.LayerControl().add_to(m)
 
