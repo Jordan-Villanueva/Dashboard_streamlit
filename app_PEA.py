@@ -3,12 +3,12 @@
 
 import streamlit as st
 import pandas as pd
-import geopandas as gpd
 import folium
 import plotly.express as px
 from streamlit_folium import folium_static
 from streamlit.components.v1 import components
 from folium.plugins import MarkerCluster
+import json
 
 # Establecer la configuración de la página
 st.set_page_config(layout="wide")
@@ -83,20 +83,26 @@ st.title(f'Mapa Coroplético de Población Económica Activa en México en {sele
 #poblacion total EA
 filtered_data = filtered_data.groupby('Entidad_Federativa')['Poblacion_Economicamente_Activa'].sum().reset_index()
 
-# Ruta a los archivos shapefile
-shapefile_path = 'dest2019gw/dest2019gw.shp'
+# Cargar archivo GeoJSON (asegúrate de que esté en el mismo folder que app_PEA.py)
+with open("mexico_estados.geojson", "r", encoding='utf-8') as f:
+    geojson_data = json.load(f)
 
-# Leer el archivo shapefile
-gdf = gpd.read_file(shapefile_path, encoding='utf-8')
-gdf['NOM_ENT'][4] = 'Coahuila'
-gdf['NOM_ENT'][15] = 'Michoacán'
-gdf['NOM_ENT'][29] = 'Veracruz'
+# Convertimos a DataFrame la info del GeoJSON para poder hacer el merge
+estado_list = []
+for feature in geojson_data["features"]:
+    estado = feature["properties"]["NOM_ENT"]
+    estado_list.append(estado)
+geo_df = pd.DataFrame({"NOM_ENT": estado_list})
 
-# Supongamos que la columna 'Entidad_Federativa' es la clave
-merged_data = gdf.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
+# Normalizar nombres para hacer el merge
+geo_df['NOM_ENT'] = geo_df['NOM_ENT'].replace({
+    "Coahuila de Zaragoza": "Coahuila",
+    "Michoacán de Ocampo": "Michoacán",
+    "Veracruz de Ignacio de la Llave": "Veracruz"
+})
 
-# Simplificar la geometría
-gdf['geometry'] = gdf['geometry'].simplify(tolerance=0.005)
+# Merge con tus datos
+merged_data = geo_df.merge(filtered_data, left_on='NOM_ENT', right_on='Entidad_Federativa', how='left')
 
 # Create a centered container
 centered_container = st.container()
@@ -108,7 +114,7 @@ with centered_container:
 
     # Your map-related code (Choropleth, MarkerCluster, etc.) goes here
     folium.Choropleth(
-        geo_data=gdf,
+        geo_data=geojson_data,
         name="choropleth",
         data=merged_data,
         columns=["NOM_ENT", "Poblacion_Economicamente_Activa"],
